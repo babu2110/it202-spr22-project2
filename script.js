@@ -1,6 +1,12 @@
 let gameDiv = document.querySelector("#startGame");
 const alphaBet = new Map();
 
+// Service worker to make the game installable
+if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(function() {
+        console.log("Service worker is registered.")
+    });
+}
 
 document.addEventListener("keypress", (e)=> {
     populateAlphaBet();
