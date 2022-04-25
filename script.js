@@ -1,4 +1,7 @@
 let gameDiv = document.querySelector("#startGame");
+let c = document.querySelector("#gameCanvas");
+let ctx = c.getContext("2d");
+
 const alphaBet = new Map();
 
 // Service worker to make the game installable
