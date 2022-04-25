@@ -35,5 +35,13 @@ function intToChar(x) {
     return alphaBet.get(x);
 }
 function draw() {
+    ctx.clearRect(0,0, c.clientWidth, c.height);
 
+    ctx.beginPath();
+    ctx.arc(100,z,10,0,2*Math.PI);
+    ctx.closePath();
+    ctx.fillStyle = "black";
+    ctx.fill();
+
+    window.requestAnimationFrame(draw);
 }
