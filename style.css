@@ -1,16 +1,9 @@
-.canvas-container {
-    position: relative;
-    top: 0px;
-    bottom: 0px;
-    right: 0px;
-    left: 0px;
-}
-#canvas {
-    position: relative;
-    background-color: lightcyan;
-}
-#startButton {
-    position: absolute;
-    left: 30%;
-    top: 40%;
+#startGame {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid green;
+    height: 200px;
+    font-size: 50px;
+    padding: 10px;
 }
