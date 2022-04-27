@@ -2,115 +2,272 @@ let gameDiv = document.querySelector("#startGame");
 let c = document.querySelector("#gameCanvas");
 let ctx = c.getContext("2d");
 let countS = 0;
-let width = window.innerWidth * 0.05;
-let height = window.innerHeight * 0.2;
-console.log("This is width " + width);
-console.log("This is height " + height);
 
-let ball = {
+let lives = 3;
+let score = 0;
+let level = 1;
+let bg_img = new Image();
+bg_img.src = "bg.jpeg";
 
-}
-let paddle = {
-    x: window.innerWidth * 0.1 - width/2,
-    y: window.innerHeight/2 - height/2,
-    w: window.innerWidth * 0.025,
-    h: window.innerHeight * 0.2,
-    color: "BLACK",
-    score: 0
-}
+// let img = new Image();
+// img.src = "pacman-mouth-closed.png";
 
-const alphaBet = new Map();
 
-// Service worker to make the game installable
-if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(function() {
-        console.log("Service worker is registered.");
-    });
-}
-window.onload = function() {
-    console.log('loading...');
+let gameObjects = [
+    {
+        "type":"player",
+        "x": window.innerWidth* 0.05 - (window.innerWidth *0.05)/2,
+        "y": window.innerHeight/2 - (window.innerHeight *0.2)/2,
+        "w": window.innerWidth *0.03,
+        "h": window.innerHeight*0.2,
+        "delta_x": 3,
+        "delta_y": 7
+    },
+    {
+        "type":"benefit",
+        "x":window.innerWidth,
+        "y": Math.floor(Math.random() *50) + 30,
+        "delta_x":-5,
+        "delta_y":0,
+        "radius": 30
+    },
+    {
+        "type":"harm",
+        "x":window.innerWidth,
+        "y":Math.floor(Math.random() * window.innerHeight) + 30,
+        "delta_x": -Math.floor(Math.random() * 10),
+        "delta_y":0,
+        "radius": Math.floor(Math.random() * 30) + 5
+    },
+    {
+        "type":"harm",
+        "x":window.innerWidth,
+        "y":Math.floor(Math.random() * window.innerHeight) + 25,
+        "delta_x": -Math.floor(Math.random() * 10),
+        "delta_y":0,
+        "radius": Math.floor(Math.random() * 25) + 5
+    }
+]
+window.onload = function () {
+    console.log("Loading");
     prepareDocument();
     resizeCanvas();
 }
 
 window.onresize = function() {
-    console.log('resizing...');
+    console.log("Resizing");
     resizeCanvas();
 }
-
-document.addEventListener("keypress", (e)=> {
-    populateAlphaBet();
-    if(intToChar(e.which) == 's') {
-        // remove welcome text from the start menu
-        if(countS < 1) {
-            console.log("Game is going to start, pls wait!")
-            const wlcTxt = document.querySelector("#startGame");
-            wlcTxt.remove();
+// add flakes
+let mf = 100;
+let flakes= [];
+for (let i = 0; i < mf; i++) {
+   flakes.push({
+       x:Math.random()*window.innerWidth,
+       y:Math.random()*window.innerHeight,
+       r:Math.random* 5 +1,
+       d: Math.random()+1
+   });
+}
+bg_img.addEventListener('load', (event) => {
+    // Start the game "S"
+    window.addEventListener('keypress', (e)=> {
+        if(e.keyCode === 115 && countS < 1) {
+            document.querySelector("#startGame").remove();
+            console.log(e.keyCode);
             countS++;
+            draw();
         }
-        let color = "black";
-        let deltaY = 3;
-        console.log(paddle.x)
-        console.log(paddle.y)
-        console.log(paddle.w)
-        console.log(paddle.h)
-        console.log(paddle.color)
-        drawPaddle(paddle.x, paddle.y, paddle.w, paddle.h, paddle.color);
+    });
+});
+// // Start the game "S"
+// window.addEventListener('keypress', (e)=> {
+//     if(e.keyCode === 115 && countS < 1) {
+//         document.querySelector("#startGame").remove();
+//         console.log(e.keyCode);
+//         countS++;
+//         draw();
+//     }
+// });
+// Play again "P"
+window.addEventListener('keypress', (e)=> {
+    if(e.keyCode === 112 && lives === 0) {
+        lives = 3;
+        level = 1;
+        score = 0;
+        // draw the flakes
+        draw();
     }
 });
 
-//
-function drawText(x,y, text, color){
-    ctx.fillStyle = color;
-    ctx.font = "55px fantasy";
-    ctx.fillText(text, x,y);
+window.addEventListener('keydown', (e)=> {
+    if(e.key == "ArrowUp") {
+        gameObjects[0].y = gameObjects[0].y - gameObjects[0].delta_y;
+    } else if (e.key == "ArrowDown") {
+        gameObjects[0].y = gameObjects[0].y + gameObjects[0].delta_y;
+    }
+});
+function draw() {
+    ctx.clearRect(0,0,c.width, c.height);
+    ctx.drawImage(bg_img, 0,0, window.innerWidth, window.innerHeight);
+    gameObjects.forEach( (obj) => {
+        if(obj.type != "player") {
+            obj["x"] += obj["delta_x"];
+        }
+    })
+    // handle conditions
+    gameObjects.forEach( (obj) => {
+        if(obj["x"] + obj["radius"] < 0 && obj.type != "player") {
+            obj["x"] = c.width;
+            obj["y"] = Math.abs(getRandomInt(c.height - obj["radius"]));
+        }
+    });
+
+    let pTop = Math.floor(gameObjects[0].y)
+    let pBottom = Math.floor(gameObjects[0].y + gameObjects[0].h);
+
+    for (let i = 1; i < gameObjects.length; i++) {
+        let obTop = Math.floor(gameObjects[i].y) - Math.floor(gameObjects[i].radius);
+        let obBottom = Math.floor(gameObjects[i].y + gameObjects[i].radius);
+        let collidedOb = collectObjectPoints(obTop, obBottom, pTop, pBottom);
+
+        let obLeftEdge = Math.floor(gameObjects[i]["x"]-gameObjects[i]["radius"]);
+        let playerRightEdge = Math.floor(gameObjects[0].x) + Math.floor(gameObjects[0].w);
+        if( collidedOb && (obLeftEdge < playerRightEdge) && gameObjects[i].type == "harm") {
+            gameObjects[i]["x"] = c.width;
+            gameObjects[i]["y"] = getRandomInt(c.height) + 30;
+            console.log("Collided with " + i);
+            lives--;
+        }
+        if(collidedOb && (obLeftEdge < playerRightEdge) && gameObjects[i].type == "benefit") {
+            gameObjects[i].x = c.width;
+            gameObjects[i].y = getRandomInt(c.height) + 30;
+            console.log("Point 1");
+            score += 300;
+        }
+    }
+    
+    if(score >= 600 && level === 1) {
+        level++;
+        score=0;
+        gameObjects[0].delta_y += 2;
+        gameObjects.forEach((ob)=> {
+            if(ob.type != "player") {
+                ob["delta_x"] -= level; 
+            }
+        });
+        const addEl = {
+            "type":"harm",
+            "x":window.innerWidth,
+            "y":Math.floor(Math.random() * window.innerHeight) + 30,
+            "delta_x": -Math.floor(Math.random() * 10),
+            "delta_y":0,
+            "radius": Math.floor(Math.random() * 20) + 10
+        };
+        const addBen = {
+                "type":"benefit",
+                "x":window.innerWidth,
+                "y": Math.floor(Math.random() *50) + 30,
+                "delta_x":-5,
+                "delta_y":0,
+                "radius": 30
+            }
+        gameObjects.push(addEl);
+        gameObjects.push(addBen);
+        score = 0;
+    }
+    if(score >= 1000 && level === 2) {
+        level++;
+        score=0;
+        gameObjects[0].delta_y += 4;
+        gameObjects.forEach((ob)=> {
+            if(ob.type != "player"){
+                ob["delta_x"] -= level;
+            }
+        });
+        const addEl = {
+            "type":"harm",
+            "x":window.innerWidth,
+            "y":Math.floor(Math.random() * window.innerHeight) + 30,
+            "delta_x": -Math.floor(Math.random() * 10),
+            "delta_y":0,
+            "radius": Math.floor(Math.random() * 30) + 15
+        };
+        gameObjects.push(addEl);
+        score = 0;
+    }
+    if(score >= 2000 && level === 3) {
+        score =0;
+        ctx.clearRect(0,0,c.width, c.height);
+        ctx.font = "30px Arial";
+        ctx.fillText("Congratulations! You cleared the game!", c.width/2-280, c.height/2);
+        level = 1;
+        score =0;
+        return;
+    }
+
+    if(lives == 0) {
+        console.log("Game Over");
+        ctx.clearRect(0,0,c.width, c.height);
+        ctx.font = "20px Arial";
+        let gameOver = "Game Over!";
+        let replay = "If you would like to play again press \"p\" ";
+        ctx.fillStyle = "Orange";
+        ctx.fillText(gameOver, c.width/2, c.height/2);
+        ctx.fillText(replay, c.width/2 - 100, c.height/2 + 40);
+        return;
+    }
+    // drawing the elements
+    gameObjects.forEach( (obj) => {
+        ctx.beginPath();
+        if(obj.type == "player") {
+            ctx.rect(obj.x, obj.y, obj.w, obj.h);
+        } else {
+            ctx.arc(obj["x"], obj["y"], obj["radius"], 0, 2*Math.PI);
+        }
+        ctx.closePath();
+        if(obj.type == "player" || obj.type == "benefit") {
+            ctx.fillStyle = "green";
+        } else {
+            ctx.fillStyle = "red";
+        }
+        ctx.fill();
+    });
+    
+    ctx.font = "20px Arial";
+    ctx.fillStyle = "aliceblue"
+    ctx.fillText("Score: " + score, 60, 40);
+    ctx.fillText("Lives: " + lives , 60, 70)
+    ctx.fillText("Level: " + level, 60, 100);
+    
+    
+
+    requestAnimationFrame(draw);
 }
 
-// Drawing hitting pad
-function drawPaddle(x,y, w,h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x,y,w,h);
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max) + 1;
 }
-// Ping pong ball
-function drawCircle(x, y, r, color){
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x,y,r,0, Math.PI*2, false);
-    ctx.fill();
-}
-// 
-function prepareDocument(){
+
+function prepareDocument() {
     document.body.style.padding = "0px";
     document.body.style.margin = "0px";
 }
 
-// Resizing the Canvas whenever we load it
-function resizeCanvas () {
+function resizeCanvas() {
     c.width = window.innerWidth;
     c.height = window.innerHeight;
-    paddle = {
-        x: window.innerWidth * 0.1 - width/2,
-        y: window.innerHeight/2 - height/2,
-        w: window.innerWidth * 0.025,
-        h: window.innerHeight * 0.2,
-        color: "BLACK",
-        score: 0
-    }
 }
 
-function populateAlphaBet(){
-    for (let i = 65; i < 123; i++) {
-        if(i < 91) {
-            let total = Math.abs(65-i);
-            alphaBet.set(i, String.fromCharCode('A'.charCodeAt(0) + total));
-        } else if (i > 96){
-            let total = Math.abs(97-i);
-            alphaBet.set(i, String.fromCharCode('a'.charCodeAt(0)+total));
+function collectObjectPoints(xTop, xBottom, yTop, yBottom){
+    let collectCirclePoints = new Map();
+    for (let i = xTop; i <= xBottom; i++) {
+        collectCirclePoints.set(i,i);
+    }
+    for (let j = yTop; j <= yBottom; j++) {
+        if(collectCirclePoints.has(j)) {
+            return true;
         }
     }
+    return false;
 }
-// Converting Int to Char
-function intToChar(x) {
-    return alphaBet.get(x);
-}
-

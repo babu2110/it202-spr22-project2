@@ -3,11 +3,13 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    font-size: 40px;
+    font-size: 30px;
+    color: aliceblue;
     transform: translate(-50%, -50%);
     border: 5px solid aquamarine;
     padding: 10px;
 }
+
 #gameCanvas {
-    background-color: aliceblue;
+    background-color: #102a54;
 }
