@@ -146,7 +146,7 @@ function draw() {
             gameObjects[i].x = c.width;
             gameObjects[i].y = getRandomInt(c.height) + 30;
             console.log("Point 1");
-            score += 300;
+            score += 100;
         }
     }
     
