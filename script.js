@@ -136,6 +136,7 @@ function draw() {
         let obLeftEdge = Math.floor(gameObjects[i]["x"]-gameObjects[i].w/2+20);
         let playerRightEdge = Math.floor(gameObjects[0].x) + Math.floor(gameObjects[0].w/2 - 20);
         if( collidedOb && (obLeftEdge < playerRightEdge) && gameObjects[i].type == "harm") {
+            pImg.src = 'pAfter.png';
             gameObjects[i]["x"] = c.width;
             gameObjects[i]["y"] = getRandomInt(c.height) + 30;
             console.log("Collided with " + i);
