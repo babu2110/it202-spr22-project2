@@ -6,8 +6,14 @@ let countS = 0;
 let lives = 3;
 let score = 0;
 let level = 1;
-let bg_img = new Image();
-bg_img.src = "bg.jpeg";
+var bg_img = new Image();
+var pImg = new Image();
+var bOb = new Image();
+var hOb = new Image();
+bg_img.src = 'bg.jpeg';
+pImg.src = 'pBefore.png';
+bOb.src = 'green.png';
+hOb.src = 'red.png'
 
 // let img = new Image();
 // img.src = "pacman-mouth-closed.png";
@@ -18,7 +24,7 @@ let gameObjects = [
         "type":"player",
         "x": window.innerWidth* 0.05 - (window.innerWidth *0.05)/2,
         "y": window.innerHeight/2 - (window.innerHeight *0.2)/2,
-        "w": window.innerWidth *0.03,
+        "w": window.innerWidth *0.2,
         "h": window.innerHeight*0.2,
         "delta_x": 3,
         "delta_y": 7
@@ -27,9 +33,10 @@ let gameObjects = [
         "type":"benefit",
         "x":window.innerWidth,
         "y": Math.floor(Math.random() *50) + 30,
+        "w": window.innerWidth *0.1,
+        "h": window.innerHeight*0.1,
         "delta_x":-5,
-        "delta_y":0,
-        "radius": 30
+        "delta_y":0
     },
     {
         "type":"harm",
@@ -37,7 +44,8 @@ let gameObjects = [
         "y":Math.floor(Math.random() * window.innerHeight) + 30,
         "delta_x": -Math.floor(Math.random() * 10),
         "delta_y":0,
-        "radius": Math.floor(Math.random() * 30) + 5
+        "w": window.innerWidth *0.15,
+        "h": window.innerHeight*0.1
     },
     {
         "type":"harm",
@@ -45,7 +53,8 @@ let gameObjects = [
         "y":Math.floor(Math.random() * window.innerHeight) + 25,
         "delta_x": -Math.floor(Math.random() * 10),
         "delta_y":0,
-        "radius": Math.floor(Math.random() * 25) + 5
+        "w": window.innerWidth *0.15,
+        "h": window.innerHeight*0.1
     }
 ]
 window.onload = function () {
@@ -80,15 +89,6 @@ bg_img.addEventListener('load', (event) => {
         }
     });
 });
-// // Start the game "S"
-// window.addEventListener('keypress', (e)=> {
-//     if(e.keyCode === 115 && countS < 1) {
-//         document.querySelector("#startGame").remove();
-//         console.log(e.keyCode);
-//         countS++;
-//         draw();
-//     }
-// });
 // Play again "P"
 window.addEventListener('keypress', (e)=> {
     if(e.keyCode === 112 && lives === 0) {
@@ -108,8 +108,10 @@ window.addEventListener('keydown', (e)=> {
     }
 });
 function draw() {
+    pImg.src = 'pBefore.png';
     ctx.clearRect(0,0,c.width, c.height);
     ctx.drawImage(bg_img, 0,0, window.innerWidth, window.innerHeight);
+
     gameObjects.forEach( (obj) => {
         if(obj.type != "player") {
             obj["x"] += obj["delta_x"];
@@ -117,22 +119,22 @@ function draw() {
     })
     // handle conditions
     gameObjects.forEach( (obj) => {
-        if(obj["x"] + obj["radius"] < 0 && obj.type != "player") {
+        if(obj["x"] + obj.h/2 < 0 && obj.type != "player") {
             obj["x"] = c.width;
-            obj["y"] = Math.abs(getRandomInt(c.height - obj["radius"]));
+            obj["y"] = Math.abs(getRandomInt(c.height - obj.h/2));
         }
     });
 
-    let pTop = Math.floor(gameObjects[0].y)
-    let pBottom = Math.floor(gameObjects[0].y + gameObjects[0].h);
+    let pTop = Math.floor(gameObjects[0].y) + 10
+    let pBottom = Math.floor(gameObjects[0].y + gameObjects[0].h - 10);
 
     for (let i = 1; i < gameObjects.length; i++) {
-        let obTop = Math.floor(gameObjects[i].y) - Math.floor(gameObjects[i].radius);
-        let obBottom = Math.floor(gameObjects[i].y + gameObjects[i].radius);
+        let obTop = Math.floor(gameObjects[i].y)
+        let obBottom = Math.floor(gameObjects[i].y + gameObjects[i].h);
         let collidedOb = collectObjectPoints(obTop, obBottom, pTop, pBottom);
 
-        let obLeftEdge = Math.floor(gameObjects[i]["x"]-gameObjects[i]["radius"]);
-        let playerRightEdge = Math.floor(gameObjects[0].x) + Math.floor(gameObjects[0].w);
+        let obLeftEdge = Math.floor(gameObjects[i]["x"]-gameObjects[i].w/2+20);
+        let playerRightEdge = Math.floor(gameObjects[0].x) + Math.floor(gameObjects[0].w/2 - 20);
         if( collidedOb && (obLeftEdge < playerRightEdge) && gameObjects[i].type == "harm") {
             gameObjects[i]["x"] = c.width;
             gameObjects[i]["y"] = getRandomInt(c.height) + 30;
@@ -140,6 +142,7 @@ function draw() {
             lives--;
         }
         if(collidedOb && (obLeftEdge < playerRightEdge) && gameObjects[i].type == "benefit") {
+            pImg.src = 'pAfter.png';
             gameObjects[i].x = c.width;
             gameObjects[i].y = getRandomInt(c.height) + 30;
             console.log("Point 1");
@@ -160,9 +163,10 @@ function draw() {
             "type":"harm",
             "x":window.innerWidth,
             "y":Math.floor(Math.random() * window.innerHeight) + 30,
-            "delta_x": -Math.floor(Math.random() * 10),
+            "delta_x": -Math.floor(Math.random() * 5),
             "delta_y":0,
-            "radius": Math.floor(Math.random() * 20) + 10
+            "w": window.innerWidth *0.15,
+            "h": window.innerHeight*0.1
         };
         const addBen = {
                 "type":"benefit",
@@ -170,7 +174,8 @@ function draw() {
                 "y": Math.floor(Math.random() *50) + 30,
                 "delta_x":-5,
                 "delta_y":0,
-                "radius": 30
+                "w": window.innerWidth *0.1,
+                "h": window.innerHeight*0.1,
             }
         gameObjects.push(addEl);
         gameObjects.push(addBen);
@@ -191,7 +196,8 @@ function draw() {
             "y":Math.floor(Math.random() * window.innerHeight) + 30,
             "delta_x": -Math.floor(Math.random() * 10),
             "delta_y":0,
-            "radius": Math.floor(Math.random() * 30) + 15
+            "w": window.innerWidth *0.15,
+            "h": window.innerHeight*0.1
         };
         gameObjects.push(addEl);
         score = 0;
@@ -203,10 +209,25 @@ function draw() {
         ctx.fillText("Congratulations! You cleared the game!", c.width/2-280, c.height/2);
         level = 1;
         score =0;
+        gameObjects.pop();
+        gameObjects.pop();
+        gameObjects.pop();
         return;
     }
 
     if(lives == 0) {
+        if(level == 2) {
+            gameObjects.pop();
+            gameObjects.pop();
+        }
+        if(level == 3) {
+            gameObjects.pop();
+        }
+        gameObjects.forEach((ob)=> {
+            if(ob.type != "player") {
+                ob["delta_x"] += level; 
+            }
+        });
         console.log("Game Over");
         ctx.clearRect(0,0,c.width, c.height);
         ctx.font = "20px Arial";
@@ -221,9 +242,14 @@ function draw() {
     gameObjects.forEach( (obj) => {
         ctx.beginPath();
         if(obj.type == "player") {
-            ctx.rect(obj.x, obj.y, obj.w, obj.h);
+            ctx.drawImage(pImg, obj.x, obj.y, obj.w, obj.h);
+        } else if(obj.type == "benefit"){
+            ctx.drawImage(bOb, obj.x, obj.y, obj.w, obj.h);
+            // ctx.arc(obj["x"], obj["y"], obj["radius"], 0, 2*Math.PI);
         } else {
-            ctx.arc(obj["x"], obj["y"], obj["radius"], 0, 2*Math.PI);
+            ctx.drawImage(hOb, obj.x, obj.y, obj.w, obj.h);
+            // ctx.arc(obj["x"], obj["y"], obj["radius"], 0, 2*Math.PI);
+
         }
         ctx.closePath();
         if(obj.type == "player" || obj.type == "benefit") {
