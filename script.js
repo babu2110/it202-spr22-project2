@@ -1,3 +1,9 @@
+if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function() {
+          console.log("Service worker registered");
+        });
+}
+
 let gameDiv = document.querySelector("#startGame");
 let c = document.querySelector("#gameCanvas");
 let ctx = c.getContext("2d");
